@@ -1,0 +1,86 @@
+version: '3'
+
+volumes:
+  api:
+  web:
+
+services:
+  builder:
+    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/builder"
+    build:
+      context: ./builder
+      args:
+        - API_REPO=${API_REPO}
+        - API_CODE_PATH_CONTAINER=${API_CODE_PATH_CONTAINER}
+        - STAGE=${STAGE}
+        - BRANCH=${BRANCH}
+    env_file:
+      - ./.env
+    networks:
+      - backend
+      - frontend
+
+  api:
+    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/api:${BRANCH}"
+    build:
+      context: build-api
+      dockerfile: ./Dockerfile
+      args:
+        - PROJECT_NAME=${COMPOSE_PROJECT_NAME}
+        - API_REPO=${API_REPO}
+        - API_CODE_PATH_CONTAINER=${API_CODE_PATH_CONTAINER}
+        - STAGE=${STAGE}
+        - BRANCH=${BRANCH}
+        - PRODUCTION=true
+    volumes:
+      - api:${API_CODE_PATH_CONTAINER}
+    networks:
+      - backend
+    depends_on:
+      - builder
+    env_file:
+      - ./.env
+
+  web:
+    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/web:${BRANCH}"
+    build:
+      context: ./build-web
+      dockerfile: ./Dockerfile
+      args:
+        - PROJECT_NAME=${COMPOSE_PROJECT_NAME}
+        - WEB_REPO=${WEB_REPO}
+        - WEB_CODE_PATH_CONTAINER=${WEB_CODE_PATH_CONTAINER}
+        - STAGE=${STAGE}
+        - BRANCH=${BRANCH}
+        - PRODUCTION=true
+    volumes:
+      - web:${WEB_CODE_PATH_CONTAINER}
+    depends_on:
+      - builder
+    networks:
+      - frontend
+    env_file:
+      - ./.env
+
+  ### PHP-FPM ##############################################
+  php-fpm:
+    build:
+      args:
+        - PRODUCTION=true
+    volumes:
+      - api:${API_CODE_PATH_CONTAINER}
+      - web:${WEB_CODE_PATH_CONTAINER}
+    depends_on:
+      - api
+      - web
+
+  ### NGINX Server #########################################
+  nginx:
+    environment:
+      - PRODUCTION_HOST=${PRODUCTION_HOST}
+    build:
+      args:
+        - PRODUCTION=true
+    volumes:
+      - api:${API_CODE_PATH_CONTAINER}
+      - web:${WEB_CODE_PATH_CONTAINER}

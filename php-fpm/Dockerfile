@@ -2,7 +2,6 @@ ARG PHP_VERSION=7.3
 ARG PHP_TAG=fpm
 
 FROM php:${PHP_VERSION}-${PHP_TAG} as baseimage_php-fpm
-LABEL stage=baseimage
 
 #--------------------------------------------------------------------------
 # Software's Installation

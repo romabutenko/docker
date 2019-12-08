@@ -75,7 +75,6 @@ services:
       - ${NGINX_HOST_LOG_PATH}:/var/log/nginx
       - ${NGINX_SITES_PATH}:/etc/nginx/sites-available
       - ${NGINX_SSL_PATH}:/etc/nginx/ssl
-      - ${NGINX_ENTRYPOINT_INIT}:/docker-entrypoint-init.d
     ports:
       - ${NGINX_HOST_HTTP_PORT}:80
       - ${NGINX_HOST_HTTPS_PORT}:443
@@ -105,8 +104,7 @@ services:
       - TZ=${WORKSPACE_TIMEZONE}
     volumes:
       - ${DATA_PATH_HOST}/mysql:/var/lib/mysql
-      - ${MYSQL_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
-      - ${MYSQL_ENTRYPOINT_INIT}:/docker-entrypoint-init.d
+      - ${MYSQL_ENTRY_FILE_INITDB}:${ENTRY_PATH}
     ports:
       - "${MYSQL_PORT}:3306"
     networks:
@@ -123,20 +121,17 @@ services:
       - ./.env
     privileged: true
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - ${API_SOURCE_PATH}:${API_CONTAINER_PATH}
       - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}
       - ${DATA_PATH_HOST}/dind:/var/lib/docker
-      - ${DATA_PATH_HOST}/mysql:/var/lib/mysql
-      - ${ENTRYPOINTS}:/docker-entrypoint-init.d/
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ${ENTRY_FILES}:${ENTRY_PATH}
     expose:
       - 2375
     networks:
       - backend
-#    command: "/bin/sh /docker-entrypoint-init.d/init.sh"
-    command:
-      - "for f in /docker-entrypoint-init.d/*; do /bin/sh $f; done"
-      - "chmod +x ./set-entrypoints.sh"
+    command: "for f in ${ENTRY_FILES}; do echo ${f}; done"
+#    entrypoint: ["/bin/sh", "for f in ${ENTRY_FILES}; do echo \"${f}\"; done"]
 
 networks:
   frontend:

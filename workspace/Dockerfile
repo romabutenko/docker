@@ -16,8 +16,6 @@ ARG LARADOCK_PHP_VERSION
 
 FROM laradock/workspace:2.5-${LARADOCK_PHP_VERSION}
 
-LABEL maintainer="Mahmoud Zalt <mahmoud@zalt.me>"
-
 ARG LARADOCK_PHP_VERSION
 
 # Set Environment Variables

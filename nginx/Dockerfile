@@ -1,5 +1,5 @@
-FROM nginx:alpine as baseimage_nginx
-LABEL stage=builder
+ARG NGINX_VERSION=alpine
+FROM nginx:alpine
 
 COPY nginx.conf /etc/nginx/
 
@@ -30,7 +30,6 @@ ADD ./startup.sh /opt/startup.sh
 RUN sed -i 's/\r//g' /opt/startup.sh
 CMD ["/bin/bash", "/opt/startup.sh"]
 
-ARG PRODUCTION
 #
 #RUN if [ "${PRODUCTION}" = "true" ]; then
 #    mkdir -p  /var/www/palantir/api && \

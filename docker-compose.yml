@@ -38,6 +38,8 @@ services:
       context: ./php-fpm
       dockerfile: ./Dockerfile
       args:
+        - PHP_VERSION=${PHP_VERSION}
+        - PHP_TAG=${PHP_TAG}
         - http_proxy
         - https_proxy
         - no_proxy
@@ -77,8 +79,8 @@ services:
     ports:
       - ${NGINX_HOST_HTTP_PORT}:80
       - ${NGINX_HOST_HTTPS_PORT}:443
-    #    depends_on:
-    #      - php-fpm
+    depends_on:
+      - php-fpm
     networks:
       - frontend
       - backend
@@ -125,14 +127,16 @@ services:
       - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}
       - ${DATA_PATH_HOST}/dind:/var/lib/docker
       - ${DATA_PATH_HOST}/mysql:/var/lib/mysql
-      - ${MYSQL_ENTRYPOINT_init}:/docker-entrypoint-init.d
+      - ${ENTRYPOINTS}:/docker-entrypoint-init.d/
       - /var/run/docker.sock:/var/run/docker.sock
     expose:
       - 2375
     networks:
       - backend
 #    command: "/bin/sh /docker-entrypoint-init.d/init.sh"
-    command: tail -f /docker-entrypoint-init.d/
+    command:
+      - "for f in /docker-entrypoint-init.d/*; do /bin/sh $f; done"
+      - "chmod +x ./set-entrypoints.sh"
 
 networks:
   frontend:

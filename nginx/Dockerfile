@@ -18,7 +18,8 @@ ARG PHP_UPSTREAM_PORT=9000
 
 # Create 'messages' file used from 'logrotate'
 RUN touch /var/log/messages
-
+ENV ENTRYPOINTS=${ENTRYPOINTS}
+RUN echo ${ENTRYPOINTS} && return
 # Copy 'logrotate' config file
 COPY logrotate/nginx /etc/logrotate.d/
 
@@ -39,7 +40,8 @@ CMD ["/bin/bash", "/opt/startup.sh"]
 #    COPY --from=webimage /var/www/palantir/web /var/www/palantir/web;
 #fi;
 
-WORKDIR /var/apps/palantir
+ARG WORK_DIR=/var/apps/palantir
+WORKDIR ${WORK_DIR}
 
 
-EXPOSE 80 8080 443
+EXPOSE 80 443

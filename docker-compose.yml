@@ -104,7 +104,7 @@ services:
       - TZ=${WORKSPACE_TIMEZONE}
     volumes:
       - ${DATA_PATH_HOST}/mysql:/var/lib/mysql
-      - ${MYSQL_ENTRY_FILE_INITDB}:${ENTRY_PATH}
+      - ${MYSQL_ENTRY_FILE_INITDB}:${INIT_CONTAINER_PATH}
     ports:
       - "${MYSQL_PORT}:3306"
     networks:
@@ -125,13 +125,13 @@ services:
       - ${API_SOURCE_PATH}:${API_CONTAINER_PATH}
       - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}
       - ${DATA_PATH_HOST}/dind:/var/lib/docker
-      - ${ENTRY_FILES}:${ENTRY_PATH}
+      - ${INIT_FILES}:${INIT_CONTAINER_PATH}
+      - ./autoclean.sh:${INIT_CONTAINER_PATH}/clean_up
     expose:
       - 2375
     networks:
       - backend
-    command: "for f in ${ENTRY_FILES}; do echo ${f}; done"
-#    entrypoint: ["/bin/sh", "for f in ${ENTRY_FILES}; do echo \"${f}\"; done"]
+    entrypoint: ["/bin/sh", "-c", "/home/palantir/autoclean.sh"]
 
 networks:
   frontend:

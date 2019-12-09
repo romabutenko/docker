@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ENTRY_FILES=
+INIT_FILES=
 FILES=
 
 for f in */docker-entrypoint-init.d/*; do
@@ -11,4 +11,4 @@ FILES=${FILES%?}
 
 echo "${FILES}"
 
-export ENTRY_FILES="${FILES}"
+export INIT_FILES="${FILES}"

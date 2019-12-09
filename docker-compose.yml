@@ -103,8 +103,8 @@ services:
       - TZ=${WORKSPACE_TIMEZONE}
     volumes:
       - ${DATA_PATH_HOST}/mysql:/var/lib/mysql
-      - ${MYSQL_ENTRY_FILES_INIT}:/docker-entrypoint-initdb.d
-#      - ${MYSQL_ENTRY_FILES_INIT}:${INIT_CONTAINER_PATH}
+      - ${MYSQL_ENTRY_FILE_INIT}:${INIT_CONTAINER_PATH}
+      - ${MYSQL_ENTRY_FILE_INITDB}:/docker-entrypoint-initdb.d
     ports:
       - "${MYSQL_PORT}:3306"
     networks:
@@ -118,17 +118,15 @@ services:
     privileged: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-#      - ${API_SOURCE_PATH}:${API_CONTAINER_PATH}
-#      - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}
+      - ${API_SOURCE_PATH}:${API_CONTAINER_PATH}
+      - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}
       - ${DATA_PATH_HOST}/dind:/var/lib/docker
-      - ${MYSQL_ENTRY_FILES_INIT}:/docker-entrypoint-initdb.d
-    #      - ${INIT_FILES}:${INIT_CONTAINER_PATH}
-#      - ./autoclean.sh:${INIT_CONTAINER_PATH}/clean_up
+      - ${ENTRYPOINTS_PATH}:/docker-entrypoints
     expose:
       - 2375
     networks:
       - backend
-    entrypoint: ["/bin/sh", "/docker-entrypoint-initdb.d/mysql.sh"]
+    entrypoint: ["/bin/sh", "/docker-entrypoints/startup.sh"]
     env_file:
       - ./.env
 

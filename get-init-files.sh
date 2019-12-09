@@ -3,8 +3,9 @@
 INIT_FILES=
 FILES=
 
-for f in */docker-entrypoint-init.d/; do
-  FILES="${FILES}./${f} "
+for f in */docker-entrypoint-initdb.d/; do
+  echo "${f}"
+  #  FILES="${FILES}./${f} "
 done
 
 FILES=${FILES%?}
@@ -12,3 +13,5 @@ FILES=${FILES%?}
 echo "${FILES}"
 
 export INIT_FILES="${FILES}"
+
+

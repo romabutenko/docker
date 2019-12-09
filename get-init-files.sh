@@ -3,7 +3,7 @@
 INIT_FILES=
 FILES=
 
-for f in */docker-entrypoint-init.d/*; do
+for f in */docker-entrypoint-init.d/; do
   FILES="${FILES}./${f} "
 done
 

@@ -1,5 +1,4 @@
 version: '3'
-
 services:
   #  api:
   #    build:
@@ -104,34 +103,34 @@ services:
       - TZ=${WORKSPACE_TIMEZONE}
     volumes:
       - ${DATA_PATH_HOST}/mysql:/var/lib/mysql
-      - ${MYSQL_ENTRY_FILE_INITDB}:${INIT_CONTAINER_PATH}
+      - ${MYSQL_ENTRY_FILES_INIT}:/docker-entrypoint-initdb.d
+#      - ${MYSQL_ENTRY_FILES_INIT}:${INIT_CONTAINER_PATH}
     ports:
       - "${MYSQL_PORT}:3306"
     networks:
       - backend
-    env_file:
-      - ./.env
     links:
       - docker-in-docker
 
   ### Docker-in-Docker ################################################
   docker-in-docker:
     image: docker:dind
-    env_file:
-      - ./.env
     privileged: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${API_SOURCE_PATH}:${API_CONTAINER_PATH}
-      - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}
+#      - ${API_SOURCE_PATH}:${API_CONTAINER_PATH}
+#      - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}
       - ${DATA_PATH_HOST}/dind:/var/lib/docker
-      - ${INIT_FILES}:${INIT_CONTAINER_PATH}
-      - ./autoclean.sh:${INIT_CONTAINER_PATH}/clean_up
+      - ${MYSQL_ENTRY_FILES_INIT}:/docker-entrypoint-initdb.d
+    #      - ${INIT_FILES}:${INIT_CONTAINER_PATH}
+#      - ./autoclean.sh:${INIT_CONTAINER_PATH}/clean_up
     expose:
       - 2375
     networks:
       - backend
-    entrypoint: ["/bin/sh", "-c", "/home/palantir/autoclean.sh"]
+    entrypoint: ["/bin/sh", "/docker-entrypoint-initdb.d/mysql.sh"]
+    env_file:
+      - ./.env
 
 networks:
   frontend:

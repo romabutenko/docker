@@ -18,8 +18,7 @@ ARG PHP_UPSTREAM_PORT=9000
 
 # Create 'messages' file used from 'logrotate'
 RUN touch /var/log/messages
-ENV INIT_FILES=${INIT_FILES}
-RUN echo ${INIT_FILES} && return
+
 # Copy 'logrotate' config file
 COPY logrotate/nginx /etc/logrotate.d/
 

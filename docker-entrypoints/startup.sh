@@ -1,6 +1,6 @@
 #!/bin/sh
-if [ "${PWD}" = "/docker-entrypoints" ]
-  then
+#if [ "${PWD}" = "/docker-entrypoints" ]
+#  then
     for f in "${PWD}"/*
 do
   if [ "${f}" != "startup.sh" ]
@@ -9,4 +9,4 @@ do
 #    /bin/sh "${f}"
   fi
 done
-fi
+#fi

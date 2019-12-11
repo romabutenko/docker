@@ -42,14 +42,6 @@ RUN apt-get update && \
 # Image Setup
 #--------------------------------------------------------------------------
 #
-# To edit the 'php-fpm' base Image, visit its repository on Github
-#    https://github.com/Laradock/php-fpm
-#
-# To change its version, see the available Tags on the Docker Hub:
-#    https://hub.docker.com/r/laradock/php-fpm/tags/
-#
-# Note: Base Image name format {image-tag}-{php-version}
-#
 
 FROM baseimage_php-fpm
 
@@ -70,11 +62,8 @@ RUN set -xe; \
     #--------------------------------------------------------------------------
     #
     # Mandatory Software's such as ("mcrypt", "pdo_mysql", "libssl-dev", ....)
-    # are installed on the base image 'palantir/php-fpm' image. If you want
-    # to add more Software's or remove existing one, you need to edit the
-    # base image (https://github.com/Laradock/php-fpm).
+    # are installed on the base image 'palantir/php-fpm' image.
     #
-    # next lines are here becase there is no auto build on dockerhub see https://github.com/laradock/laradock/pull/1903#issuecomment-463142846
     libzip-dev zip unzip && \
     docker-php-ext-configure zip --with-libzip && \
     # Install the zip extension
@@ -180,7 +169,7 @@ ARG INSTALL_PHPDBG=false
 
 RUN if [ ${INSTALL_PHPDBG} = true ]; then \
     # Load the xdebug extension only with phpunit commands
-    apt-get install -y --force-yes php${LARADOCK_PHP_VERSION}-phpdbg \
+    apt-get install -y --force-yes php${PHP_VERSION}-phpdbg \
 ;fi
 
 ###########################################################################
@@ -300,7 +289,7 @@ RUN if [ ${INSTALL_MYSQL_CLIENT} = true ]; then \
 # Check PHP version:
 ###########################################################################
 
-RUN set -xe; php -v | head -n 1 | grep -q "PHP ${LARADOCK_PHP_VERSION}."
+RUN set -xe; php -v | head -n 1 | grep -q "PHP ${PHP_VERSION}."
 
 #
 #--------------------------------------------------------------------------
@@ -329,7 +318,7 @@ RUN if [ ${INSTALL_FAKETIME} = true ]; then \
 
 ARG COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}
 
-WORKDIR /var/apps/${COMPOSE_PROJECT_NAME}
+WORKDIR /var/www//${COMPOSE_PROJECT_NAME}
 
 CMD ["php-fpm"]
 

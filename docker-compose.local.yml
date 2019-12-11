@@ -2,31 +2,45 @@ version: '3'
 
 services:
   ### DOCKER-WEB-UI ################################################
-#  docker-web-ui:
-#    build:
-#      context: ./docker-web-ui
-#    environment:
-#      - TZ=${WORKSPACE_TIMEZONE}
-#      - ENV_DOCKER_REGISTRY_HOST=${DOCKER_WEBUI_REGISTRY_HOST}
-#      - ENV_DOCKER_REGISTRY_PORT=${DOCKER_WEBUI_REGISTRY_PORT}
-#      - ENV_DOCKER_REGISTRY_USE_SSL=${DOCKER_REGISTRY_USE_SSL}
-#      - ENV_MODE_BROWSE_ONLY=${DOCKER_REGISTRY_BROWSE_ONLY}
-#    volumes:
-#      - /etc/localtime:/etc/localtime:ro
-#    ports:
-#      - "${DOCKER_WEBUI_PORT}:9090"
-#    networks:
+  #  docker-web-ui:
+  #    build:
+  #      context: ./docker-web-ui
+  #    environment:
+  #      - TZ=${WORKSPACE_TIMEZONE}
+  #      - ENV_DOCKER_REGISTRY_HOST=${DOCKER_WEBUI_REGISTRY_HOST}
+  #      - ENV_DOCKER_REGISTRY_PORT=${DOCKER_WEBUI_REGISTRY_PORT}
+  #      - ENV_DOCKER_REGISTRY_USE_SSL=${DOCKER_REGISTRY_USE_SSL}
+  #      - ENV_MODE_BROWSE_ONLY=${DOCKER_REGISTRY_BROWSE_ONLY}
+  #    volumes:
+  #      - /etc/localtime:/etc/localtime:ro
+  #    ports:
+  #      - "${DOCKER_WEBUI_PORT}:9090"
+  #    networks:
+
+  web:
+    build:
+      context: ../
+      dockerfile: ./build-web/Dockerfile
+      args:
+        - REPOSITORY=${WEB_REPO}
+        - WEB_CONTAINER_PATH=${WEB_CONTAINER_PATH}
+        - STAGE=${STAGE}
+        - BRANCH=${BRANCH}
+    env_file:
+      - ./.env
+    networks:
+      - frontend
+    volumes:
+      - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}
 
   ### PHP-FPM ##############################################
   php-fpm:
     build:
-      context: ./php-fpm
-      dockerfile: ./Dockerfile
       args:
         - STAGE=${STAGE}
-    volumes:
-      - ${API_CODE_PATH_HOST}:${API_CODE_PATH_CONTAINER}
-      - ${WEB_CODE_PATH_HOST}:${WEB_CODE_PATH_CONTAINER}
+#    volumes:
+#      - ${API_SOURCE_PATH}:${API_CONTAINER_PATH}
+#      - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}
 #    depends_on:
 #      - workspace
 
@@ -35,25 +49,24 @@ services:
     build:
       args:
         - PRODUCTION=false
-    volumes:
-      - ${API_CODE_PATH_HOST}:${API_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
-      - ${WEB_CODE_PATH_HOST}:${WEB_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+#    volumes:
+#      - ${API_SOURCE_PATH}:${API_CONTAINER_PATH}${APP_CODE_CONTAINER_FLAG}
+#      - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}${APP_CODE_CONTAINER_FLAG}
     ports:
-      - "${NGINX_HOST_HTTP_PORT}:80"
-      - "${NGINX_HOST_HTTPS_PORT}:443"
-      - "8080:8080"
+      - ${NGINX_HOST_HTTP_PORT}:80
+      - ${NGINX_HOST_HTTPS_PORT}:443
     depends_on:
       - php-fpm
-#    networks:
-#      - default
+
 
 #  ### Workspace Utilities ##################################
 #  workspace:
+#    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/workspace:${BRANCH}"
 #    build:
 #      context: ./workspace
 #      args:
-#        - LARADOCK_PHP_VERSION=${PHP_VERSION}
-#        - LARADOCK_PHALCON_VERSION=${PHALCON_VERSION}
+#        - PHP_VERSION=${PHP_VERSION}
+#        - PALANTIR_PHALCON_VERSION=${PHALCON_VERSION}
 #        - INSTALL_SUBVERSION=${WORKSPACE_INSTALL_SUBVERSION}
 #        - INSTALL_XDEBUG=${WORKSPACE_INSTALL_XDEBUG}
 #        - INSTALL_PHPDBG=${WORKSPACE_INSTALL_PHPDBG}
@@ -129,7 +142,8 @@ services:
 #        - CHANGE_SOURCE=${CHANGE_SOURCE}
 #        - UBUNTU_SOURCE=${UBUNTU_SOURCE}
 #    volumes:
-#      - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+#      - ${API_SOURCE_PATH}:${API_CONTAINER_PATH}${APP_CODE_CONTAINER_FLAG}
+#      - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}${APP_CODE_CONTAINER_FLAG}
 #      - ./php-worker/supervisord.d:/etc/supervisord.d
 #    extra_hosts:
 #      - "dockerhost:${DOCKER_HOST_IP}"
@@ -144,3 +158,58 @@ services:
 #      - backend
 #    links:
 #      - docker-in-docker
+
+#  ### PHP Worker ############################################
+#  php-worker:
+#    build:
+#      context: ./php-worker
+#      args:
+#        - CHANGE_SOURCE=${CHANGE_SOURCE}
+#        - PHP_VERSION=${PHP_VERSION}
+#        - PHALCON_VERSION=${PHALCON_VERSION}
+#        - INSTALL_PGSQL=${PHP_WORKER_INSTALL_PGSQL}
+#        - INSTALL_BCMATH=${PHP_WORKER_INSTALL_BCMATH}
+#        - INSTALL_PHALCON=${PHP_WORKER_INSTALL_PHALCON}
+#        - INSTALL_SOAP=${PHP_WORKER_INSTALL_SOAP}
+#        - INSTALL_ZIP_ARCHIVE=${PHP_WORKER_INSTALL_ZIP_ARCHIVE}
+#        - INSTALL_MYSQL_CLIENT=${PHP_WORKER_INSTALL_MYSQL_CLIENT}
+#        - INSTALL_AMQP=${PHP_WORKER_INSTALL_AMQP}
+#        - INSTALL_CASSANDRA=${PHP_WORKER_INSTALL_CASSANDRA}
+#        - INSTALL_GEARMAN=${PHP_WORKER_INSTALL_GEARMAN}
+#        - INSTALL_GHOSTSCRIPT=${PHP_WORKER_INSTALL_GHOSTSCRIPT}
+#        - INSTALL_SWOOLE=${PHP_WORKER_INSTALL_SWOOLE}
+#        - INSTALL_TAINT=${PHP_WORKER_INSTALL_TAINT}
+#        - INSTALL_FFMPEG=${PHP_WORKER_INSTALL_FFMPEG}
+#        - INSTALL_GMP=${PHP_WORKER_INSTALL_GMP}
+#        - INSTALL_REDIS=${PHP_WORKER_INSTALL_REDIS}
+#        - PUID=${PHP_WORKER_PUID}
+#        - PGID=${PHP_WORKER_PGID}
+#    volumes:
+#      - ${API_SOURCE_PATH}:${API_CONTAINER_PATH}${APP_CODE_CONTAINER_FLAG}
+#      - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}${APP_CODE_CONTAINER_FLAG}
+#      - ./php-worker/supervisord.d:/etc/supervisord.d
+#    depends_on:
+#      - workspace
+#    extra_hosts:
+#      - "dockerhost:${DOCKER_HOST_IP}"
+#    networks:
+#      - backend
+
+
+  ### Docker-in-Docker ################################################
+#  docker-in-docker:
+#    image: docker:dind
+#    privileged: true
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock
+#      - ${API_SOURCE_PATH}:${API_CONTAINER_PATH}
+#      - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}
+#      - ${DATA_PATH_HOST}/dind:/var/lib/docker
+#      - ${ENTRYPOINTS_PATH}:/docker-entrypoints
+#    expose:
+#      - 2375
+#    networks:
+#      - backend
+#    #    entrypoint: ["/bin/sh", "/docker-entrypoints/startup.sh"]
+#    env_file:
+#      - ./.env

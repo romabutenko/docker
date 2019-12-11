@@ -1,5 +1,5 @@
 ARG MYSQL_VERSION=latest
-FROM mysql:${MYSQL_VERSION}
+FROM mysql:${MYSQL_VERSION} as mysqllocal
 
 #####################################
 # Set Timezone

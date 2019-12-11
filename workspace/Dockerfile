@@ -1,22 +1,87 @@
 #
 #--------------------------------------------------------------------------
+# Base Image Setup
+#--------------------------------------------------------------------------
+#
+
+FROM phusion/baseimage:latest as workspace_baseimage
+
+RUN DEBIAN_FRONTEND=noninteractive
+RUN locale-gen en_US.UTF-8
+
+ENV LANGUAGE=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+ENV LC_CTYPE=en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV TERM xterm
+
+# Add the "PHP 7" ppa
+RUN apt-get install -y software-properties-common && \
+    add-apt-repository -y ppa:ondrej/php
+
+#
+#--------------------------------------------------------------------------
+# Software's Installation
+#--------------------------------------------------------------------------
+#
+
+RUN echo 'DPkg::options { "--force-confdef"; };' >> /etc/apt/apt.conf
+
+# Install "PHP Extentions", "libraries", "Software's"
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y --allow-downgrades --allow-remove-essential \
+        --allow-change-held-packages \
+        php${PHP_VERSION}-cli \
+        php${PHP_VERSION}-common \
+        php${PHP_VERSION}-curl \
+        php${PHP_VERSION}-intl \
+        php${PHP_VERSION}-json \
+        php${PHP_VERSION}-xml \
+        php${PHP_VERSION}-mbstring \
+        php${PHP_VERSION}-mcrypt \
+        php${PHP_VERSION}-mysql \
+        php${PHP_VERSION}-pgsql \
+        php${PHP_VERSION}-zip \
+        php${PHP_VERSION}-bcmath \
+        php${PHP_VERSION}-memcached \
+        php${PHP_VERSION}-gd \
+        php${PHP_VERSION}-dev \
+        pkg-config \
+        libcurl4-openssl-dev \
+        libedit-dev \
+        libssl-dev \
+        libxml2-dev \
+        xz-utils \
+        libsqlite3-dev \
+        git \
+        curl \
+        vim \
+        nano \
+        postgresql-client \
+    && apt-get clean
+
+#####################################
+# Composer:
+#####################################
+
+# Install composer and add its bin to the PATH.
+RUN curl -s http://getcomposer.org/installer | php && \
+    echo "export PATH=${PATH}:/var/www/vendor/bin" >> ~/.bashrc && \
+    mv composer.phar /usr/local/bin/composer
+
+# Source the bash
+RUN . ~/.bashrc
+
+#
+#--------------------------------------------------------------------------
 # Image Setup
 #--------------------------------------------------------------------------
 #
-# To edit the 'workspace' base Image, visit its repository on Github
-#    https://github.com/Laradock/workspace
-#
-# To change its version, see the available Tags on the Docker Hub:
-#    https://hub.docker.com/r/laradock/workspace/tags/
-#
-# Note: Base Image name format {image-tag}-{php-version}
-#
 
-ARG LARADOCK_PHP_VERSION
+FROM workspace_baseimage
 
-FROM laradock/workspace:2.5-${LARADOCK_PHP_VERSION}
-
-ARG LARADOCK_PHP_VERSION
+ARG PHP_VERSION
 
 # Set Environment Variables
 ENV DEBIAN_FRONTEND noninteractive
@@ -25,7 +90,7 @@ ENV DEBIAN_FRONTEND noninteractive
 USER root
 
 ###########################################################################
-# Laradock non-root user:
+# Palantir non-root user:
 ###########################################################################
 
 # Add a non-root user to prevent files being created with root permissions on host machine.
@@ -38,9 +103,9 @@ ENV PGID ${PGID}
 RUN set -xe; \
     apt-get update -yqq && \
     pecl channel-update pecl.php.net && \
-    groupadd -g ${PGID} laradock && \
-    useradd -u ${PUID} -g laradock -m laradock -G docker_env && \
-    usermod -p "*" laradock -s /bin/bash && \
+    groupadd -g ${PGID} palantir && \
+    useradd -u ${PUID} -g palantir -m palantir -G docker_env && \
+    usermod -p "*" palantir -s /bin/bash && \
     apt-get install -yqq \
       apt-utils \
       #
@@ -49,14 +114,11 @@ RUN set -xe; \
       #--------------------------------------------------------------------------
       #
       # Mandatory Software's such as ("php-cli", "git", "vim", ....) are
-      # installed on the base image 'laradock/workspace' image. If you want
-      # to add more Software's or remove existing one, you need to edit the
-      # base image (https://github.com/Laradock/workspace).
+      # installed on the base image 'palantir/workspace' image.
       #
-      # next lines are here becase there is no auto build on dockerhub see https://github.com/laradock/laradock/pull/1903#issuecomment-463142846
       libzip-dev zip unzip \
       # Install the zip extension
-      php${LARADOCK_PHP_VERSION}-zip \
+      php${PHP_VERSION}-zip \
       # nasm
       nasm && \
       php -m | grep -q 'zip'
@@ -89,17 +151,17 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 USER root
 
 COPY ./aliases.sh /root/aliases.sh
-COPY ./aliases.sh /home/laradock/aliases.sh
+COPY ./aliases.sh /home/palantir/aliases.sh
 
 RUN sed -i 's/\r//' /root/aliases.sh && \
-    sed -i 's/\r//' /home/laradock/aliases.sh && \
-    chown laradock:laradock /home/laradock/aliases.sh && \
+    sed -i 's/\r//' /home/palantir/aliases.sh && \
+    chown palantir:palantir /home/palantir/aliases.sh && \
     echo "" >> ~/.bashrc && \
     echo "# Load Custom Aliases" >> ~/.bashrc && \
     echo "source ~/aliases.sh" >> ~/.bashrc && \
 	  echo "" >> ~/.bashrc
 
-USER laradock
+USER palantir
 
 RUN echo "" >> ~/.bashrc && \
     echo "# Load Custom Aliases" >> ~/.bashrc && \
@@ -113,19 +175,19 @@ RUN echo "" >> ~/.bashrc && \
 USER root
 
 # Add the composer.json
-COPY ./composer.json /home/laradock/.composer/composer.json
+COPY ./composer.json /home/palantir/.composer/composer.json
 
 # Add the auth.json for magento 2 credentials
-COPY ./auth.json /home/laradock/.composer/auth.json
+COPY ./auth.json /home/palantir/.composer/auth.json
 
-# Make sure that ~/.composer belongs to laradock
-RUN chown -R laradock:laradock /home/laradock/.composer
+# Make sure that ~/.composer belongs to palantir
+RUN chown -R palantir:palantir /home/palantir/.composer
 
 # Export composer vendor path
 RUN echo "" >> ~/.bashrc && \
     echo 'export PATH="$HOME/.composer/vendor/bin:$PATH"' >> ~/.bashrc
 
-USER laradock
+USER palantir
 
 # Check if global install need to be ran
 ARG COMPOSER_GLOBAL_INSTALL=false
@@ -142,7 +204,7 @@ ENV COMPOSER_AUTH ${COMPOSER_AUTH}
 
 RUN if [ ${COMPOSER_AUTH} = false ]; then \
     # remove the file
-    rm /home/laradock/.composer/auth.json \
+    rm /home/palantir/.composer/auth.json \
 ;fi
 
 ARG COMPOSER_REPO_PACKAGIST
@@ -161,7 +223,7 @@ RUN echo "" >> ~/.bashrc && \
 ###########################################################################
 
 # add ./vendor/bin to non-root user's bashrc (needed for phpunit)
-USER laradock
+USER palantir
 
 RUN echo "" >> ~/.bashrc && \
     echo 'export PATH="/var/www/vendor/bin:$PATH"' >> ~/.bashrc
@@ -222,7 +284,7 @@ ARG INSTALL_SSH2=false
 
 RUN if [ ${INSTALL_SSH2} = true ]; then \
   # Install the PHP SSH2 extension
-  apt-get -y install libssh2-1-dev php${LARADOCK_PHP_VERSION}-ssh2 \
+  apt-get -y install libssh2-1-dev php${PHP_VERSION}-ssh2 \
 ;fi
 
 ###########################################################################
@@ -232,11 +294,11 @@ RUN if [ ${INSTALL_SSH2} = true ]; then \
 USER root
 
 ARG INSTALL_GMP=false
-ARG PHP_VERSION=${LARADOCK_PHP_VERSION}
+ARG PHP_VERSION=${PHP_VERSION}
 
 RUN if [ ${INSTALL_GMP} = true ]; then \
   # Install the PHP GMP extension
-  apt-get -y install php${LARADOCK_PHP_VERSION}-gmp \
+  apt-get -y install php${PHP_VERSION}-gmp \
 ;fi
 
 ###########################################################################
@@ -249,7 +311,7 @@ ARG INSTALL_SOAP=false
 
 RUN if [ ${INSTALL_SOAP} = true ]; then \
   # Install the PHP SOAP extension
-  apt-get -y install libxml2-dev php${LARADOCK_PHP_VERSION}-soap \
+  apt-get -y install libxml2-dev php${PHP_VERSION}-soap \
 ;fi
 
 ###########################################################################
@@ -262,7 +324,7 @@ ARG INSTALL_XSL=false
 
 RUN if [ ${INSTALL_XSL} = true ]; then \
   # Install the PHP XSL extension
-  apt-get -y install libxslt-dev php${LARADOCK_PHP_VERSION}-xsl \
+  apt-get -y install libxslt-dev php${PHP_VERSION}-xsl \
 ;fi
 
 
@@ -274,7 +336,7 @@ ARG INSTALL_LDAP=false
 
 RUN if [ ${INSTALL_LDAP} = true ]; then \
     apt-get install -y libldap2-dev && \
-    apt-get install -y php${LARADOCK_PHP_VERSION}-ldap \
+    apt-get install -y php${PHP_VERSION}-ldap \
 ;fi
 
 ###########################################################################
@@ -284,7 +346,7 @@ RUN if [ ${INSTALL_LDAP} = true ]; then \
 ARG INSTALL_IMAP=false
 
 RUN if [ ${INSTALL_IMAP} = true ]; then \
-    apt-get install -y php${LARADOCK_PHP_VERSION}-imap \
+    apt-get install -y php${PHP_VERSION}-imap \
 ;fi
 
 ###########################################################################
@@ -310,16 +372,16 @@ ARG INSTALL_XDEBUG=false
 
 RUN if [ ${INSTALL_XDEBUG} = true ]; then \
     # Load the xdebug extension only with phpunit commands
-    apt-get install -y php${LARADOCK_PHP_VERSION}-xdebug && \
-    sed -i 's/^;//g' /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/20-xdebug.ini \
+    apt-get install -y php${PHP_VERSION}-xdebug && \
+    sed -i 's/^;//g' /etc/php/${PHP_VERSION}/cli/conf.d/20-xdebug.ini \
 ;fi
 
 # ADD for REMOTE debugging
-COPY ./xdebug.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/xdebug.ini
+COPY ./xdebug.ini /etc/php/${PHP_VERSION}/cli/conf.d/xdebug.ini
 
-RUN sed -i "s/xdebug.remote_autostart=0/xdebug.remote_autostart=1/" /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/xdebug.ini && \
-    sed -i "s/xdebug.remote_enable=0/xdebug.remote_enable=1/" /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/xdebug.ini && \
-    sed -i "s/xdebug.cli_color=0/xdebug.cli_color=1/" /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/xdebug.ini
+RUN sed -i "s/xdebug.remote_autostart=0/xdebug.remote_autostart=1/" /etc/php/${PHP_VERSION}/cli/conf.d/xdebug.ini && \
+    sed -i "s/xdebug.remote_enable=0/xdebug.remote_enable=1/" /etc/php/${PHP_VERSION}/cli/conf.d/xdebug.ini && \
+    sed -i "s/xdebug.cli_color=0/xdebug.cli_color=1/" /etc/php/${PHP_VERSION}/cli/conf.d/xdebug.ini
 
 ###########################################################################
 # Phpdbg:
@@ -331,7 +393,7 @@ ARG INSTALL_PHPDBG=false
 
 RUN if [ ${INSTALL_PHPDBG} = true ]; then \
     # Load the xdebug extension only with phpunit commands
-    apt-get install -y --force-yes php${LARADOCK_PHP_VERSION}-phpdbg \
+    apt-get install -y --force-yes php${PHP_VERSION}-phpdbg \
 ;fi
 
 ###########################################################################
@@ -368,8 +430,8 @@ RUN if [ ${INSTALL_WORKSPACE_SSH} = true ]; then \
         && rm -f /tmp/id_rsa* \
         && chmod 644 /root/.ssh/authorized_keys /root/.ssh/id_rsa.pub \
     && chmod 400 /root/.ssh/id_rsa \
-    && cp -rf /root/.ssh /home/laradock \
-    && chown -R laradock:laradock /home/laradock/.ssh \
+    && cp -rf /root/.ssh /home/palantir \
+    && chown -R palantir:palantir /home/palantir/.ssh \
 ;fi
 
 ###########################################################################
@@ -382,12 +444,12 @@ RUN if [ ${INSTALL_MONGO} = true ]; then \
     # Install the mongodb extension
     if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
       pecl install mongo && \
-      echo "extension=mongo.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/mongo.ini && \
-      ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/mongo.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/30-mongo.ini \
+      echo "extension=mongo.so" >> /etc/php/${PHP_VERSION}/mods-available/mongo.ini && \
+      ln -s /etc/php/${PHP_VERSION}/mods-available/mongo.ini /etc/php/${PHP_VERSION}/cli/conf.d/30-mongo.ini \
     ;fi && \
     pecl install mongodb && \
-    echo "extension=mongodb.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/mongodb.ini && \
-    ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/mongodb.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/30-mongodb.ini \
+    echo "extension=mongodb.so" >> /etc/php/${PHP_VERSION}/mods-available/mongodb.ini && \
+    ln -s /etc/php/${PHP_VERSION}/mods-available/mongodb.ini /etc/php/${PHP_VERSION}/cli/conf.d/30-mongodb.ini \
 ;fi
 
 ###########################################################################
@@ -399,8 +461,8 @@ ARG INSTALL_AMQP=false
 RUN if [ ${INSTALL_AMQP} = true ]; then \
     apt-get install librabbitmq-dev -y && \
     pecl -q install amqp && \
-    echo "extension=amqp.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/amqp.ini && \
-    ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/amqp.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/30-amqp.ini \
+    echo "extension=amqp.so" >> /etc/php/${PHP_VERSION}/mods-available/amqp.ini && \
+    ln -s /etc/php/${PHP_VERSION}/mods-available/amqp.ini /etc/php/${PHP_VERSION}/cli/conf.d/30-amqp.ini \
 ;fi
 
 ###########################################################################
@@ -430,8 +492,8 @@ RUN if [ ${INSTALL_CASSANDRA} = true ]; then \
     make clean >/dev/null && \
     make >/dev/null 2>&1 && \
     make install && \
-    echo "extension=cassandra.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/cassandra.ini && \
-    ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/cassandra.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/30-cassandra.ini \
+    echo "extension=cassandra.so" >> /etc/php/${PHP_VERSION}/mods-available/cassandra.ini && \
+    ln -s /etc/php/${PHP_VERSION}/mods-available/cassandra.ini /etc/php/${PHP_VERSION}/cli/conf.d/30-cassandra.ini \
 ;fi
 
 ###########################################################################
@@ -474,8 +536,8 @@ RUN if [ ${INSTALL_SWOOLE} = true ]; then \
         pecl install swoole; \
       fi \
     fi && \
-    echo "extension=swoole.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/swoole.ini && \
-    ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/swoole.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/20-swoole.ini \
+    echo "extension=swoole.so" >> /etc/php/${PHP_VERSION}/mods-available/swoole.ini && \
+    ln -s /etc/php/${PHP_VERSION}/mods-available/swoole.ini /etc/php/${PHP_VERSION}/cli/conf.d/20-swoole.ini \
     && php -m | grep -q 'swoole' \
 ;fi
 
@@ -489,8 +551,8 @@ RUN if [ "${INSTALL_TAINT}" = true ]; then \
     # Install Php TAINT Extension
     if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
       pecl install taint && \
-      echo "extension=taint.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/taint.ini && \
-      ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/taint.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/20-taint.ini && \
+      echo "extension=taint.so" >> /etc/php/${PHP_VERSION}/mods-available/taint.ini && \
+      ln -s /etc/php/${PHP_VERSION}/mods-available/taint.ini /etc/php/${PHP_VERSION}/cli/conf.d/20-taint.ini && \
       php -m | grep -q 'taint'; \
     fi \
 ;fi
@@ -514,8 +576,8 @@ ARG INSTALL_INOTIFY=false
 
 RUN if [ ${INSTALL_INOTIFY} = true ]; then \
     pecl -q install inotify && \
-    echo "extension=inotify.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/inotify.ini && \
-    ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/inotify.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/20-inotify.ini \
+    echo "extension=inotify.so" >> /etc/php/${PHP_VERSION}/mods-available/inotify.ini && \
+    ln -s /etc/php/${PHP_VERSION}/mods-available/inotify.ini /etc/php/${PHP_VERSION}/cli/conf.d/20-inotify.ini \
 ;fi
 
 ###########################################################################
@@ -541,8 +603,8 @@ RUN if [ ${INSTALL_IONCUBE} = true ]; then \
     # Install the php ioncube loader
     curl -L -o /tmp/ioncube_loaders_lin_x86-64.tar.gz https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz \
     && tar zxpf /tmp/ioncube_loaders_lin_x86-64.tar.gz -C /tmp \
-    && mv /tmp/ioncube/ioncube_loader_lin_${LARADOCK_PHP_VERSION}.so $(php -r "echo ini_get('extension_dir');")/ioncube_loader.so \
-    && echo "zend_extension=ioncube_loader.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/0ioncube.ini \
+    && mv /tmp/ioncube/ioncube_loader_lin_${PHP_VERSION}.so $(php -r "echo ini_get('extension_dir');")/ioncube_loader.so \
+    && echo "zend_extension=ioncube_loader.so" >> /etc/php/${PHP_VERSION}/mods-available/0ioncube.ini \
     && rm -rf /tmp/ioncube* \
 ;fi
 
@@ -561,7 +623,7 @@ RUN if [ ${INSTALL_DRUPAL_CONSOLE} = true ]; then \
     chmod +x /usr/local/bin/drupal \
 ;fi
 
-USER laradock
+USER palantir
 
 ###########################################################################
 # Node / NVM:
@@ -577,7 +639,7 @@ ARG INSTALL_NPM_VUE_CLI=false
 ARG INSTALL_NPM_ANGULAR_CLI=false
 ARG NPM_REGISTRY
 ENV NPM_REGISTRY ${NPM_REGISTRY}
-ENV NVM_DIR /home/laradock/.nvm
+ENV NVM_DIR /home/palantir/.nvm
 
 RUN if [ ${INSTALL_NODE} = true ]; then \
     # Install nvm (A Node Version Manager)
@@ -602,7 +664,7 @@ RUN if [ ${INSTALL_NODE} = true ]; then \
         && if [ ${INSTALL_NPM_ANGULAR_CLI} = true ]; then \
         npm install -g @angular/cli \
         ;fi \
-        && ln -s `npm bin --global` /home/laradock/.node-bin \
+        && ln -s `npm bin --global` /home/palantir/.node-bin \
 ;fi
 
 # Wouldn't execute when added to the RUN statement in the above block
@@ -618,12 +680,12 @@ USER root
 
 RUN if [ ${INSTALL_NODE} = true ]; then \
     echo "" >> ~/.bashrc && \
-    echo 'export NVM_DIR="/home/laradock/.nvm"' >> ~/.bashrc && \
+    echo 'export NVM_DIR="/home/palantir/.nvm"' >> ~/.bashrc && \
     echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> ~/.bashrc \
 ;fi
 
 # Add PATH for node
-ENV PATH $PATH:/home/laradock/.node-bin
+ENV PATH $PATH:/home/palantir/.node-bin
 
 # Make it so the node modules can be executed with 'docker-compose exec'
 # We'll create symbolic links into '/usr/local/bin'.
@@ -647,7 +709,7 @@ RUN if [ ${NPM_REGISTRY} ]; then \
 # YARN:
 ###########################################################################
 
-USER laradock
+USER palantir
 
 ARG INSTALL_YARN=false
 ARG YARN_VERSION=latest
@@ -669,12 +731,12 @@ USER root
 
 RUN if [ ${INSTALL_YARN} = true ]; then \
     echo "" >> ~/.bashrc && \
-    echo 'export YARN_DIR="/home/laradock/.yarn"' >> ~/.bashrc && \
+    echo 'export YARN_DIR="/home/palantir/.yarn"' >> ~/.bashrc && \
     echo 'export PATH="$YARN_DIR/bin:$PATH"' >> ~/.bashrc \
 ;fi
 
 # Add PATH for YARN
-ENV PATH $PATH:/home/laradock/.yarn/bin
+ENV PATH $PATH:/home/palantir/.yarn/bin
 
 ###########################################################################
 # PHP Aerospike:
@@ -713,9 +775,9 @@ RUN set -xe; \
         ) \
       fi \
     && rm /tmp/aerospike-client-php.tar.gz \
-    && echo 'extension=aerospike.so' >> /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/aerospike.ini \
-    && echo 'aerospike.udf.lua_system_path=/usr/local/aerospike/lua' >> /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/aerospike.ini \
-    && echo 'aerospike.udf.lua_user_path=/usr/local/aerospike/usr-lua' >> /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/aerospike.ini \
+    && echo 'extension=aerospike.so' >> /etc/php/${PHP_VERSION}/cli/conf.d/aerospike.ini \
+    && echo 'aerospike.udf.lua_system_path=/usr/local/aerospike/lua' >> /etc/php/${PHP_VERSION}/cli/conf.d/aerospike.ini \
+    && echo 'aerospike.udf.lua_user_path=/usr/local/aerospike/usr-lua' >> /etc/php/${PHP_VERSION}/cli/conf.d/aerospike.ini \
   ;fi
 
 ###########################################################################
@@ -736,7 +798,7 @@ RUN set -xe; \
     else \
       pecl install v8js; \
     fi \
-    && echo "extension=v8js.so" >> /etc/php/${LARADOCK_PHP_VERSION}/cli/php.ini \
+    && echo "extension=v8js.so" >> /etc/php/${PHP_VERSION}/cli/php.ini \
     && php -m | grep -q 'v8js' \
   ;fi
 
@@ -744,7 +806,7 @@ RUN set -xe; \
 # Laravel Envoy:
 ###########################################################################
 
-USER laradock
+USER palantir
 
 ARG INSTALL_LARAVEL_ENVOY=false
 
@@ -757,7 +819,7 @@ RUN if [ ${INSTALL_LARAVEL_ENVOY} = true ]; then \
 # Laravel Installer:
 ###########################################################################
 
-USER laradock
+USER palantir
 
 ARG INSTALL_LARAVEL_INSTALLER=false
 
@@ -795,7 +857,7 @@ RUN if [ ${INSTALL_DEPLOYER} = true ]; then \
 ###########################################################################
 # Prestissimo:
 ###########################################################################
-USER laradock
+USER palantir
 
 ARG INSTALL_PRESTISSIMO=false
 
@@ -862,8 +924,8 @@ RUN set -eux; \
       ;else \
         pecl install sqlsrv pdo_sqlsrv \
       ;fi && \
-      echo "extension=sqlsrv.so"     > /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/20-sqlsrv.ini && \
-      echo "extension=pdo_sqlsrv.so" > /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/20-pdo_sqlsrv.ini \
+      echo "extension=sqlsrv.so"     > /etc/php/${PHP_VERSION}/cli/conf.d/20-sqlsrv.ini && \
+      echo "extension=pdo_sqlsrv.so" > /etc/php/${PHP_VERSION}/cli/conf.d/20-pdo_sqlsrv.ini \
       && php -m | grep -q 'sqlsrv' \
       && php -m | grep -q 'pdo_sqlsrv' \
     ;fi \
@@ -899,7 +961,7 @@ RUN if [ ${INSTALL_IMAGE_OPTIMIZERS} = true ]; then \
     ;fi\
 ;fi
 
-USER laradock
+USER palantir
 
 ###########################################################################
 # Symfony:
@@ -962,7 +1024,7 @@ RUN if [ ${INSTALL_SUPERVISOR} = true ]; then \
   ;fi \
 ;fi
 
-USER laradock
+USER palantir
 
 ###########################################################################
 # ImageMagick:
@@ -1039,17 +1101,17 @@ RUN if [ ${INSTALL_DUSK_DEPS} = true ]; then \
 ###########################################################################
 
 ARG INSTALL_PHALCON=false
-ARG LARADOCK_PHALCON_VERSION
-ENV LARADOCK_PHALCON_VERSION ${LARADOCK_PHALCON_VERSION}
+ARG PALANTIR_PHALCON_VERSION
+ENV PALANTIR_PHALCON_VERSION ${PALANTIR_PHALCON_VERSION}
 
 RUN if [ $INSTALL_PHALCON = true ]; then \
     apt-get update && apt-get install -y unzip libpcre3-dev gcc make re2c \
-    && curl -L -o /tmp/cphalcon.zip https://github.com/phalcon/cphalcon/archive/v${LARADOCK_PHALCON_VERSION}.zip \
+    && curl -L -o /tmp/cphalcon.zip https://github.com/phalcon/cphalcon/archive/v${PALANTIR_PHALCON_VERSION}.zip \
     && unzip -d /tmp/ /tmp/cphalcon.zip \
-    && cd /tmp/cphalcon-${LARADOCK_PHALCON_VERSION}/build \
+    && cd /tmp/cphalcon-${PALANTIR_PHALCON_VERSION}/build \
     && ./install \
-    && echo "extension=phalcon.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/phalcon.ini \
-    && ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/phalcon.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/30-phalcon.ini \
+    && echo "extension=phalcon.so" >> /etc/php/${PHP_VERSION}/mods-available/phalcon.ini \
+    && ln -s /etc/php/${PHP_VERSION}/mods-available/phalcon.ini /etc/php/${PHP_VERSION}/cli/conf.d/30-phalcon.ini \
     && rm -rf /tmp/cphalcon* \
 ;fi
 
@@ -1107,8 +1169,8 @@ RUN if [ ${INSTALL_YAML} = true ]; then \
     else \
         pecl install yaml; \
     fi && \
-    echo "extension=yaml.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/yaml.ini && \
-    ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/yaml.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/35-yaml.ini \
+    echo "extension=yaml.so" >> /etc/php/${PHP_VERSION}/mods-available/yaml.ini && \
+    ln -s /etc/php/${PHP_VERSION}/mods-available/yaml.ini /etc/php/${PHP_VERSION}/cli/conf.d/35-yaml.ini \
 ;fi
 
 ###########################################################################
@@ -1150,7 +1212,7 @@ RUN if [ ${INSTALL_GNU_PARALLEL} = true ]; then \
 # Check PHP version:
 ###########################################################################
 
-RUN set -xe; php -v | head -n 1 | grep -q "PHP ${LARADOCK_PHP_VERSION}."
+RUN set -xe; php -v | head -n 1 | grep -q "PHP ${PHP_VERSION}."
 
 #
 #--------------------------------------------------------------------------

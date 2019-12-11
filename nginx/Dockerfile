@@ -30,16 +30,7 @@ ADD ./startup.sh /opt/startup.sh
 RUN sed -i 's/\r//g' /opt/startup.sh
 CMD ["/bin/bash", "/opt/startup.sh"]
 
-#
-#RUN if [ "${PRODUCTION}" = "true" ]; then
-#    mkdir -p  /var/www/palantir/api && \
-#    mkdir -p  /var/www/palantir/web
-#
-#    COPY --from=apiimage /var/app /var/www/palantir/api
-#    COPY --from=webimage /var/www/palantir/web /var/www/palantir/web;
-#fi;
-
-ARG WORK_DIR=/var/apps/palantir
+ARG WORK_DIR=/var/www/palantir
 WORKDIR ${WORK_DIR}
 
 

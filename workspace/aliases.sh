@@ -114,6 +114,7 @@ alias grb="git rebase -i"
 alias gbr="git branch"
 alias gc="git commit"
 alias gck="git checkout"
+alias workspace="d exec -ti $(docker ps -q --filter name="palantir_workspace") /bin/bash"
 
 # Create a new directory and enter it
 function mkd() {

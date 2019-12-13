@@ -56,7 +56,6 @@ RUN apt-get update && \
         libsqlite3-dev \
         git \
         curl \
-        vim \
         nano \
         postgresql-client \
     && apt-get clean
@@ -227,16 +226,6 @@ USER palantir
 
 RUN echo "" >> ~/.bashrc && \
     echo 'export PATH="/var/www/vendor/bin:$PATH"' >> ~/.bashrc
-
-###########################################################################
-# Crontab
-###########################################################################
-
-USER root
-
-COPY ./crontab /etc/cron.d
-
-RUN chmod -R 644 /etc/cron.d
 
 ###########################################################################
 # Drush:
@@ -1195,18 +1184,6 @@ RUN if [ ${INSTALL_MAILPARSE} = true ]; then \
     apt-get install -yqq php-mailparse \
 ;fi
 
-###########################################################################
-# GNU Parallel:
-###########################################################################
-
-USER root
-
-ARG INSTALL_GNU_PARALLEL=false
-
-RUN if [ ${INSTALL_GNU_PARALLEL} = true ]; then \
-  apt-get -y install parallel \
-;fi
-
 
 ###########################################################################
 # Check PHP version:
@@ -1228,4 +1205,11 @@ RUN apt-get clean && \
     rm /var/log/lastlog /var/log/faillog
 
 # Set default work directory
-WORKDIR /var/www
+#ARG API_SOURCE_PATH
+#ARG WEB_SOURCE_PATH
+#ARG API_CONTAINER_PATH
+#ARG WEB_CONTAINER_PATH
+
+#RUN echo $PWD && cp ../${WEB_SOURCE_PATH} ${WEB_CONTAINER_PATH} && \
+#    npm install --no-index --find-links dist todo_api --production && npm run serve
+WORKDIR /var/www/palantir

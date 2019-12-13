@@ -13,21 +13,21 @@ services:
   #    volumes:
   #      - ./../api/:${API_CODE_PATH_CONTAINER}
 
-#  web:
-#    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/web:${BRANCH}"
-#    build:
-#      context: ./build-web
-#      args:
-#        - WEB_REPO=${WEB_REPO}
-#        - WEB_CODE_PATH_CONTAINER=${WEB_CODE_PATH_CONTAINER}
-#        - STAGE=${STAGE}
-#        - BRANCH=${BRANCH}
-#    env_file:
-#      - ./.env
-#    networks:
-#      - frontend
-#    volumes:
-#      - ./../web/:${WEB_CODE_PATH_CONTAINER}
+  #  web:
+  #    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/web:${BRANCH}"
+  #    build:
+  #      context: ./build-web
+  #      args:
+  #        - WEB_REPO=${WEB_REPO}
+  #        - WEB_CODE_PATH_CONTAINER=${WEB_CODE_PATH_CONTAINER}
+  #        - STAGE=${STAGE}
+  #        - BRANCH=${BRANCH}
+  #    env_file:
+  #      - ./.env
+  #    networks:
+  #      - frontend
+  #    volumes:
+  #      - ./../web/:${WEB_CODE_PATH_CONTAINER}
 
 
   ### PHP-FPM ##############################################
@@ -103,6 +103,11 @@ services:
       - "${MYSQL_PORT}:3306"
     networks:
       - backend
+
+  workspace:
+    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/workspace:${BRANCH}"
+    build:
+      context: ./workspace
 
 networks:
   frontend:

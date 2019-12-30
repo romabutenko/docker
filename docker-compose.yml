@@ -82,25 +82,58 @@ services:
     env_file:
       - ./.env
 
-  mysql:
-    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/mysql:${BRANCH}"
-    command: mysqld --default-authentication-plugin=mysql_native_password
-    build:
-      context: ./mysql
-      args:
-        - MYSQL_VERSION=${MYSQL_VERSION}
-    environment:
-      - MYSQL_VERSION=${MYSQL_VERSION}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - TZ=${WORKSPACE_TIMEZONE}
+  ### MySQL Server #########################################
+#  mysql:
+#    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/mysql:${BRANCH}"
+#    command: mysqld --default-authentication-plugin=mysql_native_password
+#    build:
+#      context: ./mysql
+#      args:
+#        - MYSQL_VERSION=${MYSQL_VERSION}
+#    environment:
+#      - MYSQL_VERSION=${MYSQL_VERSION}
+#      - MYSQL_DATABASE=${MYSQL_DATABASE}
+#      - MYSQL_USER=${MYSQL_USER}
+#      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+#      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+#      - TZ=${WORKSPACE_TIMEZONE}
+#    volumes:
+#      - ${DATA_PATH_HOST}/mysql:/var/lib/mysql
+#      - ${MYSQL_ENTRY_FILES_INITDB}:/docker-entrypoint-initdb.d
+#    ports:
+#      - "${MYSQL_PORT}:3306"
+#    networks:
+#      - backend
+
+  ### PostgreSQL ###########################################
+  postgres:
+    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/postgres:${BRANCH}"
+    build: ./postgres
     volumes:
-      - ${DATA_PATH_HOST}/mysql:/var/lib/mysql
-      - ${MYSQL_ENTRY_FILES_INITDB}:/docker-entrypoint-initdb.d
+      - ${DATA_PATH_HOST}/postgres:/var/lib/postgresql/data
+      - ${POSTGRES_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
     ports:
-      - "${MYSQL_PORT}:3306"
+      - "${POSTGRES_PORT}:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - GITLAB_POSTGRES_INIT=${GITLAB_POSTGRES_INIT}
+      - GITLAB_POSTGRES_USER=${GITLAB_POSTGRES_USER}
+      - GITLAB_POSTGRES_PASSWORD=${GITLAB_POSTGRES_PASSWORD}
+      - GITLAB_POSTGRES_DB=${GITLAB_POSTGRES_DB}
+      - JUPYTERHUB_POSTGRES_INIT=${JUPYTERHUB_POSTGRES_INIT}
+      - JUPYTERHUB_POSTGRES_USER=${JUPYTERHUB_POSTGRES_USER}
+      - JUPYTERHUB_POSTGRES_PASSWORD=${JUPYTERHUB_POSTGRES_PASSWORD}
+      - JUPYTERHUB_POSTGRES_DB=${JUPYTERHUB_POSTGRES_DB}
+      - SONARQUBE_POSTGRES_INIT=${SONARQUBE_POSTGRES_INIT}
+      - SONARQUBE_POSTGRES_DB=${SONARQUBE_POSTGRES_DB}
+      - SONARQUBE_POSTGRES_USER=${SONARQUBE_POSTGRES_USER}
+      - SONARQUBE_POSTGRES_PASSWORD=${SONARQUBE_POSTGRES_PASSWORD}
+      - POSTGRES_CONFLUENCE_INIT=${CONFLUENCE_POSTGRES_INIT}
+      - POSTGRES_CONFLUENCE_DB=${CONFLUENCE_POSTGRES_DB}
+      - POSTGRES_CONFLUENCE_USER=${CONFLUENCE_POSTGRES_USER}
+      - POSTGRES_CONFLUENCE_PASSWORD=${CONFLUENCE_POSTGRES_PASSWORD}
     networks:
       - backend
 

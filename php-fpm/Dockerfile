@@ -1,4 +1,4 @@
-ARG PHP_VERSION=7.3
+ARG PHP_VERSION=7.4
 ARG PHP_TAG=fpm
 
 FROM php:${PHP_VERSION}-${PHP_TAG} as baseimage_php-fpm
@@ -12,9 +12,10 @@ FROM php:${PHP_VERSION}-${PHP_TAG} as baseimage_php-fpm
 
 # Install "curl", "libmemcached-dev", "libpq-dev", "libjpeg-dev",
 #         "libpng-dev", "libfreetype6-dev", "libssl-dev", "libmcrypt-dev",
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends \
+RUN set -xe && \
+  apt-get update && \
+  apt-get upgrade -y && \
+  apt-get install -y --no-install-recommends \
     curl \
     libmemcached-dev \
     libz-dev \
@@ -26,15 +27,15 @@ RUN apt-get update && \
     libmcrypt-dev \
   && rm -rf /var/lib/apt/lists/*
 
-#  # Install the PHP pdo_mysql extention
-#  RUN docker-php-ext-install pdo_mysql
-
+  # Install the PHP pdo_mysql extention
+  RUN docker-php-ext-install pdo_mysql \
   # Install the PHP pdo_pgsql extention
-  RUN docker-php-ext-install pdo_pgsql \
+  && docker-php-ext-install pdo_pgsql \
   # Install the PHP gd library
   && docker-php-ext-configure gd \
-    --with-jpeg-dir=/usr/lib \
-    --with-freetype-dir=/usr/include/freetype2 && \
+    --prefix=/usr \
+    --with-jpeg \
+    --with-freetype && \
     docker-php-ext-install gd
 
 #
@@ -65,7 +66,7 @@ RUN set -xe; \
     # are installed on the base image 'palantir/php-fpm' image.
     #
     libzip-dev zip unzip && \
-    docker-php-ext-configure zip --with-libzip && \
+    docker-php-ext-configure zip && \
     # Install the zip extension
     docker-php-ext-install zip && \
     php -m | grep -q 'zip'

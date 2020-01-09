@@ -6,9 +6,9 @@
 # example: .env POSTGRES_USER=appuser and need db name is myshop_db
 
 #psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-#        CREATE USER palantir_db WITH PASSWORD 'fndhpsydc8';
-#        CREATE DATABASE palantir_db;
-#        GRANT ALL PRIVILEGES ON DATABASE palantir_db TO palantir_db;
+#        CREATE USER psql_user WITH PASSWORD 'secret';
+#        CREATE DATABASE psql_database;
+#        GRANT ALL PRIVILEGES ON DATABASE psql_database TO psql_user;
 #EOSQL
 
 # this sh script will auto run when the postgres container starts and the $DATA_PATH_HOST/postgres not found.

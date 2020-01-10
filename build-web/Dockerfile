@@ -13,8 +13,8 @@ RUN git clone https://romabutenko@bitbucket.org/romabutenko/web.git ${WEB_CONTAI
 
 WORKDIR ${WEB_CONTAINER_PATH}
 
-RUN npm install --production && \
-    npm run build:prod
+RUN npm install
+RUN npm run build:prod
 
 #FROM node:lts-alpine as build-stage
 #WORKDIR /var/www/palantir/web/

@@ -62,6 +62,7 @@ services:
 
   ### Workspace Utilities ##################################
   workspace:
+    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/workspace:${BRANCH}"
     build:
       context: ./workspace
       args:
@@ -99,6 +100,7 @@ services:
     extra_hosts:
       - "dockerhost:${DOCKER_HOST_IP}"
       - "${COMPOSE_PROJECT_NAME}.local:0.0.0.0"
+      - 9527:9527
     tty: true
     environment:
       - PHP_IDE_CONFIG=${PHP_IDE_CONFIG}
@@ -108,43 +110,50 @@ services:
       - backend
     links:
       - docker-in-docker
+#    command: npm run dev
 
-  ### PHP Worker ############################################
-  php-worker:
-    build:
-      context: ./php-worker
-      args:
-        - CHANGE_SOURCE=${CHANGE_SOURCE}
-        - PHP_VERSION=${PHP_VERSION}
-        - PHALCON_VERSION=${PHALCON_VERSION}
-        - INSTALL_PGSQL=${PHP_WORKER_INSTALL_PGSQL}
-        - INSTALL_BCMATH=${PHP_WORKER_INSTALL_BCMATH}
-        - INSTALL_PHALCON=${PHP_WORKER_INSTALL_PHALCON}
-        - INSTALL_SOAP=${PHP_WORKER_INSTALL_SOAP}
-        - INSTALL_ZIP_ARCHIVE=${PHP_WORKER_INSTALL_ZIP_ARCHIVE}
-        - INSTALL_MYSQL_CLIENT=${PHP_WORKER_INSTALL_MYSQL_CLIENT}
-        - INSTALL_AMQP=${PHP_WORKER_INSTALL_AMQP}
-        - INSTALL_CASSANDRA=${PHP_WORKER_INSTALL_CASSANDRA}
-        - INSTALL_GEARMAN=${PHP_WORKER_INSTALL_GEARMAN}
-        - INSTALL_GHOSTSCRIPT=${PHP_WORKER_INSTALL_GHOSTSCRIPT}
-        - INSTALL_SWOOLE=${PHP_WORKER_INSTALL_SWOOLE}
-        - INSTALL_TAINT=${PHP_WORKER_INSTALL_TAINT}
-        - INSTALL_FFMPEG=${PHP_WORKER_INSTALL_FFMPEG}
-        - INSTALL_GMP=${PHP_WORKER_INSTALL_GMP}
-        - INSTALL_REDIS=${PHP_WORKER_INSTALL_REDIS}
-        - PUID=${PHP_WORKER_PUID}
-        - PGID=${PHP_WORKER_PGID}
+#  ### PHP Worker ############################################
+#  php-worker:
+#    build:
+#      context: ./php-worker
+#      args:
+#        - CHANGE_SOURCE=${CHANGE_SOURCE}
+#        - PHP_VERSION=${PHP_VERSION}
+#        - PHALCON_VERSION=${PHALCON_VERSION}
+#        - INSTALL_PGSQL=${PHP_WORKER_INSTALL_PGSQL}
+#        - INSTALL_BCMATH=${PHP_WORKER_INSTALL_BCMATH}
+#        - INSTALL_PHALCON=${PHP_WORKER_INSTALL_PHALCON}
+#        - INSTALL_SOAP=${PHP_WORKER_INSTALL_SOAP}
+#        - INSTALL_ZIP_ARCHIVE=${PHP_WORKER_INSTALL_ZIP_ARCHIVE}
+#        - INSTALL_MYSQL_CLIENT=${PHP_WORKER_INSTALL_MYSQL_CLIENT}
+#        - INSTALL_AMQP=${PHP_WORKER_INSTALL_AMQP}
+#        - INSTALL_CASSANDRA=${PHP_WORKER_INSTALL_CASSANDRA}
+#        - INSTALL_GEARMAN=${PHP_WORKER_INSTALL_GEARMAN}
+#        - INSTALL_GHOSTSCRIPT=${PHP_WORKER_INSTALL_GHOSTSCRIPT}
+#        - INSTALL_SWOOLE=${PHP_WORKER_INSTALL_SWOOLE}
+#        - INSTALL_TAINT=${PHP_WORKER_INSTALL_TAINT}
+#        - INSTALL_FFMPEG=${PHP_WORKER_INSTALL_FFMPEG}
+#        - INSTALL_GMP=${PHP_WORKER_INSTALL_GMP}
+#        - INSTALL_REDIS=${PHP_WORKER_INSTALL_REDIS}
+#        - PUID=${PHP_WORKER_PUID}
+#        - PGID=${PHP_WORKER_PGID}
+#    volumes:
+#      - ${API_SOURCE_PATH}:${API_CONTAINER_PATH}${APP_CODE_CONTAINER_FLAG}
+#      - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}${APP_CODE_CONTAINER_FLAG}
+#      - ./php-worker/supervisord.d:/etc/supervisord.d
+#    depends_on:
+#      - workspace
+#    extra_hosts:
+#      - "dockerhost:${DOCKER_HOST_IP}"
+#    networks:
+#      - backend
+
+  test-web:
+    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/web:${BRANCH}"
     volumes:
-      - ${API_SOURCE_PATH}:${API_CONTAINER_PATH}${APP_CODE_CONTAINER_FLAG}
-      - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}${APP_CODE_CONTAINER_FLAG}
-      - ./php-worker/supervisord.d:/etc/supervisord.d
-    depends_on:
-      - workspace
-    extra_hosts:
-      - "dockerhost:${DOCKER_HOST_IP}"
+      - ./test-web:${WEB_CONTAINER_PATH}
     networks:
-      - backend
-
+      - frontend
 
   ### Docker-in-Docker ################################################
   docker-in-docker:

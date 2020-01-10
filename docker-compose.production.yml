@@ -33,7 +33,7 @@ services:
         - BRANCH=${BRANCH}
         - PRODUCTION=true
     volumes:
-      - api:${API_CODE_PATH_CONTAINER}
+      - api:${API_CONTAINER_PATH}
     networks:
       - backend
     depends_on:
@@ -54,7 +54,7 @@ services:
         - BRANCH=${BRANCH}
         - PRODUCTION=true
     volumes:
-      - web:${WEB_CODE_PATH_CONTAINER}
+      - web:${WEB_CONTAINER_PATH}
     depends_on:
       - builder
     networks:

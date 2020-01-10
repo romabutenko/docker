@@ -1,38 +1,8 @@
 version: '3'
 services:
-  #  api:
-  #    build:
-  #      context: build-api
-  #      args:
-  #        - STAGE=${STAGE}
-  #        - BRANCH=${BRANCH}
-  #    env_file:
-  #      - ./.env
-  #    networks:
-  #      - backend
-  #    volumes:
-  #      - ./../api/:${API_CODE_PATH_CONTAINER}
-
-  #  web:
-  #    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/web:${BRANCH}"
-  #    build:
-  #      context: ./build-web
-  #      args:
-  #        - WEB_REPO=${WEB_REPO}
-  #        - WEB_CODE_PATH_CONTAINER=${WEB_CODE_PATH_CONTAINER}
-  #        - STAGE=${STAGE}
-  #        - BRANCH=${BRANCH}
-  #    env_file:
-  #      - ./.env
-  #    networks:
-  #      - frontend
-  #    volumes:
-  #      - ./../web/:${WEB_CODE_PATH_CONTAINER}
-
-
   ### PHP-FPM ##############################################
   php-fpm:
-    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/php-fpm:${BRANCH}"
+    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/php-fpm"
     build:
       context: ./php-fpm
       args:
@@ -45,8 +15,6 @@ services:
       - ./php-fpm/php${PHP_VERSION}.ini:/usr/local/etc/php/php.ini
     expose:
       - "9000"
-    extra_hosts:
-      - "palantir.local:127.0.0.1"
     env_file:
       - ./.env
     networks:
@@ -54,14 +22,13 @@ services:
 
   ### NGINX Server #########################################
   nginx:
-    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/nginx:${BRANCH}"
+    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/nginx"
     build:
       context: ./nginx
       args:
         - NGINX_VERSION=${NGINX_VERSION}
         - PHP_UPSTREAM_CONTAINER=${NGINX_PHP_UPSTREAM_CONTAINER}
         - PHP_UPSTREAM_PORT=${NGINX_PHP_UPSTREAM_PORT}
-        - CHANGE_SOURCE=${CHANGE_SOURCE}
         - http_proxy
         - https_proxy
         - no_proxy
@@ -105,7 +72,7 @@ services:
 
   ### PostgreSQL ###########################################
   postgres:
-    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/postgres:${BRANCH}"
+    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/postgres"
     build: ./postgres
     volumes:
       - ${DATA_PATH_HOST}/postgres:/var/lib/postgresql/data
@@ -116,22 +83,6 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-#      - GITLAB_POSTGRES_INIT=${GITLAB_POSTGRES_INIT}
-#      - GITLAB_POSTGRES_USER=${GITLAB_POSTGRES_USER}
-#      - GITLAB_POSTGRES_PASSWORD=${GITLAB_POSTGRES_PASSWORD}
-#      - GITLAB_POSTGRES_DB=${GITLAB_POSTGRES_DB}
-#      - JUPYTERHUB_POSTGRES_INIT=${JUPYTERHUB_POSTGRES_INIT}
-#      - JUPYTERHUB_POSTGRES_USER=${JUPYTERHUB_POSTGRES_USER}
-#      - JUPYTERHUB_POSTGRES_PASSWORD=${JUPYTERHUB_POSTGRES_PASSWORD}
-#      - JUPYTERHUB_POSTGRES_DB=${JUPYTERHUB_POSTGRES_DB}
-#      - SONARQUBE_POSTGRES_INIT=${SONARQUBE_POSTGRES_INIT}
-#      - SONARQUBE_POSTGRES_DB=${SONARQUBE_POSTGRES_DB}
-#      - SONARQUBE_POSTGRES_USER=${SONARQUBE_POSTGRES_USER}
-#      - SONARQUBE_POSTGRES_PASSWORD=${SONARQUBE_POSTGRES_PASSWORD}
-#      - POSTGRES_CONFLUENCE_INIT=${CONFLUENCE_POSTGRES_INIT}
-#      - POSTGRES_CONFLUENCE_DB=${CONFLUENCE_POSTGRES_DB}
-#      - POSTGRES_CONFLUENCE_USER=${CONFLUENCE_POSTGRES_USER}
-#      - POSTGRES_CONFLUENCE_PASSWORD=${CONFLUENCE_POSTGRES_PASSWORD}
     networks:
       - backend
 

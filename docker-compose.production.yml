@@ -11,15 +11,14 @@ services:
       context: ./builder
       args:
         - API_REPO=${API_REPO}
-        - API_CODE_PATH_CONTAINER=${API_CODE_PATH_CONTAINER}
+        - API_CODE_PATH_CONTAINER=${API_SOURCE_PATH}
         - STAGE=${STAGE}
         - BRANCH=${BRANCH}
-    env_file:
-      - ./.env
     networks:
       - backend
       - frontend
 
+  ### API ##############################################
   api:
     image: "${COMPOSE_PROJECT_NAME}/${STAGE}/api:${BRANCH}"
     build:
@@ -28,19 +27,17 @@ services:
       args:
         - PROJECT_NAME=${COMPOSE_PROJECT_NAME}
         - API_REPO=${API_REPO}
-        - API_CODE_PATH_CONTAINER=${API_CODE_PATH_CONTAINER}
+        - API_CODE_PATH_CONTAINER=${API_VOLUME_PATH}
         - STAGE=${STAGE}
         - BRANCH=${BRANCH}
-        - PRODUCTION=true
     volumes:
-      - api:${API_CONTAINER_PATH}
+      - api:${API_VOLUME_PATH}
     networks:
       - backend
     depends_on:
       - builder
-    env_file:
-      - ./.env
 
+  ### WEB APPLICATION ##############################################
   web:
     image: "${COMPOSE_PROJECT_NAME}/${STAGE}/web:${BRANCH}"
     build:
@@ -49,38 +46,29 @@ services:
       args:
         - PROJECT_NAME=${COMPOSE_PROJECT_NAME}
         - WEB_REPO=${WEB_REPO}
-        - WEB_CODE_PATH_CONTAINER=${WEB_CODE_PATH_CONTAINER}
+        - WEB_CODE_PATH_CONTAINER=${WEB_SOURCE_PATH}
         - STAGE=${STAGE}
         - BRANCH=${BRANCH}
-        - PRODUCTION=true
     volumes:
-      - web:${WEB_CONTAINER_PATH}
+      - web:${WEB_VOLUME_PATH}
     depends_on:
       - builder
     networks:
       - frontend
-    env_file:
-      - ./.env
 
   ### PHP-FPM ##############################################
   php-fpm:
-    build:
-      args:
-        - PRODUCTION=true
     volumes:
-      - api:${API_CODE_PATH_CONTAINER}
-      - web:${WEB_CODE_PATH_CONTAINER}
+      - api:${API_VOLUME_PATH}
+      - web:${WEB_VOLUME_PATH}
     depends_on:
       - api
       - web
 
   ### NGINX Server #########################################
   nginx:
-    environment:
-      - PRODUCTION_HOST=${PRODUCTION_HOST}
-    build:
-      args:
-        - PRODUCTION=true
+#    environment:
+#      - PRODUCTION_HOST=${PRODUCTION_HOST}
     volumes:
-      - api:${API_CODE_PATH_CONTAINER}
-      - web:${WEB_CODE_PATH_CONTAINER}
+      - api:${API_VOLUME_PATH}
+      - web:${WEB_VOLUME_PATH}

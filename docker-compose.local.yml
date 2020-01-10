@@ -1,45 +1,13 @@
 version: '3'
-
 services:
-  ### DOCKER-WEB-UI ################################################
-  #  docker-web-ui:
-  #    build:
-  #      context: ./docker-web-ui
-  #    environment:
-  #      - TZ=${WORKSPACE_TIMEZONE}
-  #      - ENV_DOCKER_REGISTRY_HOST=${DOCKER_WEBUI_REGISTRY_HOST}
-  #      - ENV_DOCKER_REGISTRY_PORT=${DOCKER_WEBUI_REGISTRY_PORT}
-  #      - ENV_DOCKER_REGISTRY_USE_SSL=${DOCKER_REGISTRY_USE_SSL}
-  #      - ENV_MODE_BROWSE_ONLY=${DOCKER_REGISTRY_BROWSE_ONLY}
-  #    volumes:
-  #      - /etc/localtime:/etc/localtime:ro
-  #    ports:
-  #      - "${DOCKER_WEBUI_PORT}:9090"
-  #    networks:
-
-  #  web:
-  #    build:
-  #      context: ./build-web
-  #      dockerfile: /Dockerfile
-  #      args:
-  #        - COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}
-  #        - WEB_REPO=${WEB_REPO}
-  #        - WEB_CONTAINER_PATH=${WEB_CONTAINER_PATH}
-  #        - STAGE=${STAGE}
-  #        - BRANCH=${BRANCH}
-  #    env_file:
-  #      - ./.env
-  #    networks:
-  #      - frontend
-  #    volumes:
-  #      - ../${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}
-
   ### PHP-FPM ##############################################
   php-fpm:
     build:
       args:
         - PRODUCTION=false
         - STAGE=${STAGE}
+    extra_hosts:
+      - "palantir.local:127.0.0.1"
     volumes:
       - ${API_SOURCE_PATH}:${API_CONTAINER_PATH}
       - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}
@@ -100,6 +68,7 @@ services:
     extra_hosts:
       - "dockerhost:${DOCKER_HOST_IP}"
       - "${COMPOSE_PROJECT_NAME}.local:0.0.0.0"
+    ports:
       - 9527:9527
     tty: true
     environment:
@@ -110,50 +79,6 @@ services:
       - backend
     links:
       - docker-in-docker
-#    command: npm run dev
-
-#  ### PHP Worker ############################################
-#  php-worker:
-#    build:
-#      context: ./php-worker
-#      args:
-#        - CHANGE_SOURCE=${CHANGE_SOURCE}
-#        - PHP_VERSION=${PHP_VERSION}
-#        - PHALCON_VERSION=${PHALCON_VERSION}
-#        - INSTALL_PGSQL=${PHP_WORKER_INSTALL_PGSQL}
-#        - INSTALL_BCMATH=${PHP_WORKER_INSTALL_BCMATH}
-#        - INSTALL_PHALCON=${PHP_WORKER_INSTALL_PHALCON}
-#        - INSTALL_SOAP=${PHP_WORKER_INSTALL_SOAP}
-#        - INSTALL_ZIP_ARCHIVE=${PHP_WORKER_INSTALL_ZIP_ARCHIVE}
-#        - INSTALL_MYSQL_CLIENT=${PHP_WORKER_INSTALL_MYSQL_CLIENT}
-#        - INSTALL_AMQP=${PHP_WORKER_INSTALL_AMQP}
-#        - INSTALL_CASSANDRA=${PHP_WORKER_INSTALL_CASSANDRA}
-#        - INSTALL_GEARMAN=${PHP_WORKER_INSTALL_GEARMAN}
-#        - INSTALL_GHOSTSCRIPT=${PHP_WORKER_INSTALL_GHOSTSCRIPT}
-#        - INSTALL_SWOOLE=${PHP_WORKER_INSTALL_SWOOLE}
-#        - INSTALL_TAINT=${PHP_WORKER_INSTALL_TAINT}
-#        - INSTALL_FFMPEG=${PHP_WORKER_INSTALL_FFMPEG}
-#        - INSTALL_GMP=${PHP_WORKER_INSTALL_GMP}
-#        - INSTALL_REDIS=${PHP_WORKER_INSTALL_REDIS}
-#        - PUID=${PHP_WORKER_PUID}
-#        - PGID=${PHP_WORKER_PGID}
-#    volumes:
-#      - ${API_SOURCE_PATH}:${API_CONTAINER_PATH}${APP_CODE_CONTAINER_FLAG}
-#      - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}${APP_CODE_CONTAINER_FLAG}
-#      - ./php-worker/supervisord.d:/etc/supervisord.d
-#    depends_on:
-#      - workspace
-#    extra_hosts:
-#      - "dockerhost:${DOCKER_HOST_IP}"
-#    networks:
-#      - backend
-
-  test-web:
-    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/web:${BRANCH}"
-    volumes:
-      - ./test-web:${WEB_CONTAINER_PATH}
-    networks:
-      - frontend
 
   ### Docker-in-Docker ################################################
   docker-in-docker:

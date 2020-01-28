@@ -466,4 +466,6 @@ RUN apt-get clean && \
 
 #RUN echo $PWD && cp ../${WEB_SOURCE_PATH} ${WEB_CONTAINER_PATH} && \
 #    npm install --no-index --find-links dist todo_api --production && npm run serve
+
+RUN mkdir -p /var/www/palantir
 WORKDIR /var/www/palantir

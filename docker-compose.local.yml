@@ -66,10 +66,10 @@ services:
       - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}${APP_CODE_CONTAINER_FLAG}
       - ./php-worker/supervisord.d:/etc/supervisord.d
     extra_hosts:
-      - "dockerhost:${DOCKER_HOST_IP}"
-      - "${COMPOSE_PROJECT_NAME}.local:0.0.0.0"
+      - "dockerhost:10.0.75.1"
     ports:
       - 9527:9527
+      - 8080:8080
     tty: true
     environment:
       - PHP_IDE_CONFIG=${PHP_IDE_CONFIG}

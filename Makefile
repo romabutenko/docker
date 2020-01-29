@@ -1,5 +1,14 @@
 .EXPORT_ALL_VARIABLES:
 
+## Checking the environment file in the "docker" folder
+ifneq ("$(wildcard .env)",)
+ $(info $(shell tput setaf 2)Using .env$(shell tput sgr0))
+ include .env
+ export $(shell sed 's/=.*//' .env)
+else
+ $(info $(shell tput setaf 1)File not found ".env"$(shell tput sgr0))
+endif
+
 ## Default environment
 _context=local
 
@@ -125,9 +134,10 @@ endif
 # TODO: сделать автоматическое переключение ветки на мастер
 checkout:
 ifeq ($(_context),local)
-	cd $(_web_path) && git checkout master
-	cd $(_api_path) && git checkout master
-	cd docker && git checkout master
+	git checkout master
+	cd $(API_SOURCE_PATH) && git checkout master
+	cd $(WEB_SOURCE_PATH) && git checkout master
+	cd ../ && git submodule update --remote
 endif
 #----------------------------------------------------------------------------------------------------------------------#
 #----------------------------------------------------------------------------------------------------------------------#

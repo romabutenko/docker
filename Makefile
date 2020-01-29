@@ -122,7 +122,6 @@ endif
 # TODO: сделать автоматическое переключение ветки на мастер
 init:
 ifeq ($(_context),local)
-	cp .env.example .env
 	git checkout master
 	cd $(API_SOURCE_PATH) && git checkout master
 	cd $(WEB_SOURCE_PATH) && git checkout master

@@ -2,11 +2,11 @@
 
 ## Include the environment file
 ifneq ("$(wildcard .env)",)
- $(info $(shell tput setaf 2)Using .env$(shell tput sgr0))
- include .env
- export $(shell sed 's/=.*//' .env)
+$(info $(shell tput setaf 2)Using .env$(shell tput sgr0))
+include .env
+export $(shell sed 's/=.*//' .env)
 else
- $(info $(shell tput setaf 1)File not found ".env"$(shell tput sgr0))
+$(info $(shell tput setaf 1)File not found ".env"$(shell tput sgr0))
 endif
 
 ## Default environment
@@ -14,12 +14,6 @@ _context=local
 
 ## List of running containers
 _running_containers=$(if $(shell docker-compose ps -q), $(shell docker-compose ps -q),)
-
-## Web path // TODO: Automatically detect submodule
-_web_path=web
-
-## Api path // TODO: Automatically detect submodule
-_api_path=web
 
 ## Checking the environment file in the "docker" folder
 #ifneq ("$(wildcard docker/.env)",)

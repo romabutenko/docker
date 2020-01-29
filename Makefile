@@ -132,13 +132,17 @@ ifeq ($(_context),local)
 endif
 
 # TODO: сделать автоматическое переключение ветки на мастер
-checkout:
+init:
 ifeq ($(_context),local)
+	cp .env.example .env
 	git checkout master
 	cd $(API_SOURCE_PATH) && git checkout master
 	cd $(WEB_SOURCE_PATH) && git checkout master
 	cd ../ && git submodule update --remote
 endif
+
+
+
 #----------------------------------------------------------------------------------------------------------------------#
 #----------------------------------------------------------------------------------------------------------------------#
 

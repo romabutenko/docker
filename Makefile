@@ -69,23 +69,17 @@ endif
 endif
 
 ifeq ($(_context), production)
-branch=master
+_branch=master
 endif
 ifeq ($(_context), local)
-branch=develop
+_branch=develop
 endif
 ifeq ($(_context), staging)
-branch=test
+_branch=test
 endif
 
 ## Builds, (re)creates, starts, and attaches to containers for a service.
 up:
-ifneq ($(or $(s),$(service)),)
-	docker-compose -f docker-compose.yml -f docker-compose.$(_context).yml up -d --no-deps --build $(or $(s), $(service))
-else
-	docker-compose -f docker-compose.yml -f docker-compose.$(_context).yml up -d --no-deps --build
-endif
-up2:
 ifneq ($(or $(s),$(service)),)
 	docker-compose -f docker-compose.yml -f docker-compose.$(_context).yml up -d --no-deps --build $(or $(s), $(service))
 else
@@ -373,5 +367,5 @@ release_docker_image:
 app: up
 
 export CONTEXT = $(_context)
-export BRANCH = $(branch)
+export BRANCH = $(_branch)
 export DOCKER_HOST_IP = $(DHIP)

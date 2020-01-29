@@ -458,14 +458,16 @@ RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
     rm /var/log/lastlog /var/log/faillog
 
-# Set default work directory
 #ARG API_SOURCE_PATH
-#ARG WEB_SOURCE_PATH
 #ARG API_CONTAINER_PATH
-#ARG WEB_CONTAINER_PATH
+#WORKDIR ${API_CONTAINER_PATH}
+#RUN composer install
 
-#RUN echo $PWD && cp ../${WEB_SOURCE_PATH} ${WEB_CONTAINER_PATH} && \
-#    npm install --no-index --find-links dist todo_api --production && npm run serve
+#ARG WEB_SOURCE_PATH
+#ARG WEB_CONTAINER_PATH
+#WORKDIR ${WEB_CONTAINER_PATH}
+#RUN npm install --no-index --find-links dist todo_api --production
+
 
 RUN mkdir -p /var/www/palantir
 WORKDIR /var/www/palantir

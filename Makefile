@@ -1,6 +1,6 @@
 .EXPORT_ALL_VARIABLES:
 
-## Checking the environment file in the "docker" folder
+## Include the environment file
 ifneq ("$(wildcard .env)",)
  $(info $(shell tput setaf 2)Using .env$(shell tput sgr0))
  include .env
@@ -366,7 +366,7 @@ release_docker_image:
 
 
 
-app: up install_dependencies
+app: up
 
 export CONTEXT = $(_context)
 export BRANCH = $(branch)

@@ -5,7 +5,7 @@ services:
     build:
       args:
         - PRODUCTION=false
-        - STAGE=${STAGE}
+        - CONTEXT=${CONTEXT}
     extra_hosts:
       - "palantir.local:127.0.0.1"
     volumes:
@@ -19,7 +19,7 @@ services:
     build:
       args:
         - PRODUCTION=false
-        - STAGE=${STAGE}
+        - CONTEXT=${CONTEXT}
     volumes:
       - ${API_SOURCE_PATH}:${API_CONTAINER_PATH}${APP_CODE_CONTAINER_FLAG}
       - ${WEB_SOURCE_PATH}:${WEB_CONTAINER_PATH}${APP_CODE_CONTAINER_FLAG}
@@ -30,7 +30,7 @@ services:
 
   ### Workspace Utilities ##################################
   workspace:
-    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/workspace:${BRANCH}"
+    image: "${COMPOSE_PROJECT_NAME}/${CONTEXT}/workspace:${BRANCH}"
     build:
       context: ./workspace
       args:

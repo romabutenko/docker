@@ -1,6 +1,6 @@
-ARG STAGE=local
+ARG CONTEXT=local
 ARG COMPOSE_PROJECT_NAME=palantir
-FROM ${COMPOSE_PROJECT_NAME}/${STAGE}/builder:latest
+FROM ${COMPOSE_PROJECT_NAME}/${CONTEXT}/builder:latest
 
 USER root
 

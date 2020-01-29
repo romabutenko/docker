@@ -2,7 +2,7 @@ version: '3'
 services:
   ### PHP-FPM ##############################################
   php-fpm:
-    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/php-fpm"
+    image: "${COMPOSE_PROJECT_NAME}/${CONTEXT}/php-fpm"
     build:
       context: ./php-fpm
       args:
@@ -22,7 +22,7 @@ services:
 
   ### NGINX Server #########################################
   nginx:
-    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/nginx"
+    image: "${COMPOSE_PROJECT_NAME}/${CONTEXT}/nginx"
     build:
       context: ./nginx
       args:
@@ -49,7 +49,7 @@ services:
 
   ### MySQL Server #########################################
 #  mysql:
-#    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/mysql:${BRANCH}"
+#    image: "${COMPOSE_PROJECT_NAME}/${CONTEXT}/mysql:${BRANCH}"
 #    command: mysqld --default-authentication-plugin=mysql_native_password
 #    build:
 #      context: ./mysql
@@ -72,7 +72,7 @@ services:
 
   ### PostgreSQL ###########################################
   postgres:
-    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/postgres"
+    image: "${COMPOSE_PROJECT_NAME}/${CONTEXT}/postgres"
     build: ./postgres
     volumes:
       - ${DATA_PATH_HOST}/postgres:/var/lib/postgresql/data

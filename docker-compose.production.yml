@@ -6,13 +6,13 @@ volumes:
 
 services:
   builder:
-    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/builder"
+    image: "${COMPOSE_PROJECT_NAME}/${CONTEXT}/builder"
     build:
       context: ./builder
       args:
         - API_REPO=${API_REPO}
         - API_CODE_PATH_CONTAINER=${API_SOURCE_PATH}
-        - STAGE=${STAGE}
+        - CONTEXT=${CONTEXT}
         - BRANCH=${BRANCH}
     networks:
       - backend
@@ -20,7 +20,7 @@ services:
 
   ### API ##############################################
   api:
-    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/api:${BRANCH}"
+    image: "${COMPOSE_PROJECT_NAME}/${CONTEXT}/api:${BRANCH}"
     build:
       context: build-api
       dockerfile: ./Dockerfile
@@ -28,7 +28,7 @@ services:
         - PROJECT_NAME=${COMPOSE_PROJECT_NAME}
         - API_REPO=${API_REPO}
         - API_CODE_PATH_CONTAINER=${API_VOLUME_PATH}
-        - STAGE=${STAGE}
+        - CONTEXT=${CONTEXT}
         - BRANCH=${BRANCH}
     volumes:
       - api:${API_VOLUME_PATH}
@@ -39,7 +39,7 @@ services:
 
   ### WEB APPLICATION ##############################################
   web:
-    image: "${COMPOSE_PROJECT_NAME}/${STAGE}/web:${BRANCH}"
+    image: "${COMPOSE_PROJECT_NAME}/${CONTEXT}/web:${BRANCH}"
     build:
       context: ./build-web
       dockerfile: ./Dockerfile
@@ -47,7 +47,7 @@ services:
         - PROJECT_NAME=${COMPOSE_PROJECT_NAME}
         - WEB_REPO=${WEB_REPO}
         - WEB_CODE_PATH_CONTAINER=${WEB_SOURCE_PATH}
-        - STAGE=${STAGE}
+        - CONTEXT=${CONTEXT}
         - BRANCH=${BRANCH}
     volumes:
       - web:${WEB_VOLUME_PATH}
